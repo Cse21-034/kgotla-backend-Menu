@@ -5,6 +5,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcrypt";
 import { z } from "zod";
+import cors from "cors";
 import { storage } from "./storage";
 import { insertUserSchema, loginSchema, insertPlanSchema, updateDayResultSchema, restartPlanSchema } from "@shared/schema";
 import { generatePlanEntries, recalculatePlanFromDay } from "./lib/calculations";
@@ -52,6 +53,19 @@ function requireAuth(req: any, res: any, next: any) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // CORS configuration
+  app.use(cors({
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:5173", // Vite dev server default
+      process.env.CORS_ORIGIN
+    ].filter(Boolean),
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    optionsSuccessStatus: 200
+  }));
+
   // Session configuration
   app.use(session({
     secret: process.env.SESSION_SECRET || "your-secret-key",
