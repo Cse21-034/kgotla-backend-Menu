@@ -88,43 +88,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 app.post("/api/auth/register", async (req, res) => {
   try {
-    // Validate input (name, email, password)
     const { name, email, password } = insertUserSchema.parse(req.body);
 
-    // Check if user already exists
     const existingUser = await storage.getUserByEmail(email);
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
-    }
+    if (existingUser) return res.status(400).json({ message: "User already exists" });
 
-    // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Create user
-    const user = await storage.createUser({
-      name,
-      email,
-      passwordHash,
-    });
+    const user = await storage.createUser({ name, email, passwordHash });
 
-    // ✅ Auto-login after registration
+    // Auto-login
     req.login(user, (err) => {
-      if (err) {
-        return res.status(500).json({ message: "Login failed after registration" });
-      }
-      res.status(201).json({
-        message: "User registered successfully",
-        user: { id: user.id, name: user.name, email: user.email },
-      });
+      if (err) return res.status(500).json({ message: "Login failed after registration" });
+      res.status(201).json({ user: { id: user.id, name: user.name, email: user.email } });
     });
-
   } catch (error) {
-    console.error("Registration error:", error);
-
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: error.errors[0].message });
     }
-
+    console.error("Registration error:", error);
     res.status(500).json({ message: "Registration failed" });
   }
 });
