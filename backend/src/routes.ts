@@ -86,7 +86,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
- app.post("/api/auth/register", async (req, res) => {
+app.post("/api/auth/register", async (req, res) => {
   try {
     // Validate input (name, email, password)
     const { name, email, password } = insertUserSchema.parse(req.body);
@@ -100,34 +100,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Create user (only pass DB fields)
+    // Create user
     const user = await storage.createUser({
       name,
       email,
-      passwordHash, // DB expects passwordHash
+      passwordHash,
     });
 
-    res.status(201).json({ message: "User registered successfully", user });
-  } catch (err) {
-    console.error("Registration error:", err);
+    // ✅ Auto-login after registration
+    req.login(user, (err) => {
+      if (err) {
+        return res.status(500).json({ message: "Login failed after registration" });
+      }
+      res.status(201).json({
+        message: "User registered successfully",
+        user: { id: user.id, name: user.name, email: user.email },
+      });
+    });
+
+  } catch (error) {
+    console.error("Registration error:", error);
+
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: error.errors[0].message });
+    }
+
     res.status(500).json({ message: "Registration failed" });
   }
 });
-
-      // Auto-login after registration
-      req.login(user, (err) => {
-        if (err) {
-          return res.status(500).json({ message: "Login failed after registration" });
-        }
-        res.json({ user: { id: user.id, name: user.name, email: user.email } });
-      });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: error.errors[0].message });
-      }
-      res.status(500).json({ message: "Registration failed" });
-    }
-  });
 
   app.post("/api/auth/login", (req, res, next) => {
     try {
