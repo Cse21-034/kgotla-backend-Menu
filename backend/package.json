@@ -10,7 +10,7 @@
     "start": "NODE_ENV=production node dist/index.js",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-     "postinstall": "npm run db:push"
+    "postinstall": "npm run db:generate && npm run db:push" 
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
