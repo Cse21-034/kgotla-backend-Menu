@@ -19,11 +19,11 @@ function ImageCarousel() {
       alt: "Ad Image 1"
     },
     {
-      src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
+      src: "https://iili.io/K34hSVa.png",
       alt: "Ad Image 2"
     },
     {
-      src: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop",
+      src: "https://iili.io/K34NHw7.png",
       alt: "Ad Image 3"
     }
   ];
