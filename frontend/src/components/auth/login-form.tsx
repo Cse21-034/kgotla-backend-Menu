@@ -9,10 +9,16 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
+import { useNavigate } from "wouter";
+
+ 
+   
+
 export function LoginForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
+const navigate = useNavigate();
+  
   const {
     register,
     handleSubmit,
