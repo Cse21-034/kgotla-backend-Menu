@@ -8,10 +8,13 @@ export function usePlans() {
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/plans');
       if (response.status === 401) {
+        console.log("usePlans: 401 Unauthorized, clearing JWT");
         localStorage.removeItem('jwt_token');
-        return null;
+        return { plans: [] };
       }
-      return response.json();
+      const data = await response.json();
+      console.log("usePlans: /api/plans response:", data);
+      return { plans: Array.isArray(data.plans) ? data.plans : [] };
     },
     retry: false,
     refetchOnWindowFocus: false,
