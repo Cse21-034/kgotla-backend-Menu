@@ -1,3 +1,4 @@
+// pages/plan-details.tsx
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -18,6 +19,15 @@ export default function PlanDetails() {
 
   const { data, isLoading, error } = useQuery<PlanDetailsResponse>({
     queryKey: ["/api/plans", id],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/plans/${id}`);
+      if (response.status === 401) {
+        localStorage.removeItem('jwt_token');
+        navigate("/login");
+        return null;
+      }
+      return response.json();
+    },
     enabled: !!id,
   });
 
@@ -58,7 +68,6 @@ export default function PlanDetails() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Button 
           variant="outline" 
@@ -98,7 +107,6 @@ export default function PlanDetails() {
         </div>
       </div>
 
-      {/* Plan Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-card rounded-lg border border-border p-4">
           <p className="text-sm text-muted-foreground">Start Wager</p>
@@ -120,7 +128,6 @@ export default function PlanDetails() {
         </div>
       </div>
 
-      {/* Plan Table */}
       <PlanTable plan={plan} dayEntries={dayEntries} />
     </div>
   );
