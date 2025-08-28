@@ -43,7 +43,8 @@ export const getQueryFn: <T>(options: {
     const res = await fetch(url, {
       credentials: "include",
     });
-    
+    console.log("Request Cookies:", document.cookie); // Log cookies sent by browser
+  console.log("Response Headers:", Object.fromEntries(res.headers)); // Log response headers
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
       return null;
     }
