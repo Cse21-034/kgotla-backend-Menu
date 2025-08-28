@@ -54,29 +54,35 @@ function requireAuth(req: any, res: any, next: any) {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // CORS configuration
-  app.use(cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:5173", // Vite dev server default
-      process.env.CORS_ORIGIN
-    ].filter(Boolean),
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    optionsSuccessStatus: 200
-  }));
+// CORS configuration
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:5173", // Vite dev server
+    "https://money-marathon.vercel.app", // Add your actual Vercel domain
+    process.env.CORS_ORIGIN
+  ].filter(Boolean),
+  credentials: true, // CRITICAL: Allow cookies
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['Set-Cookie'],
+  optionsSuccessStatus: 200
+}));
 
-  // Session configuration
-  app.use(session({
-    secret: process.env.SESSION_SECRET || "your-secret-key",
-    resave: false,
-    saveUninitialized: false,
-    cookie: { 
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
-    }
-  }));
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || "your-secret-key",
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: process.env.NODE_ENV === "production", // HTTPS only in production
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Allow cross-site
+    httpOnly: true, // Security: prevent XSS
+    domain: process.env.NODE_ENV === "production" ? undefined : undefined // Don't set domain
+  },
+  name: 'sessionId' // Custom name to avoid conflicts
+}));
 
   app.use(passport.initialize());
   app.use(passport.session());
