@@ -3,6 +3,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
+import { Pool } from "pg"; // Add this
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcrypt";
@@ -13,7 +14,12 @@ import { insertUserSchema, loginSchema, insertPlanSchema, updateDayResultSchema,
 import { generatePlanEntries, recalculatePlanFromDay } from "./lib/calculations";
 
 // Configure Postgres session store
+// Configure Postgres session store
 const PgSession = connectPgSimple(session);
+const pgPool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+});
 
 // Configure Passport
 passport.use(new LocalStrategy(
@@ -59,12 +65,22 @@ function requireAuth(req: any, res: any, next: any) {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // CORS configuration - FIXED
+  // CORS configuration
   app.use(cors({
-    origin: process.env.CORS_ORIGIN || [
-      "http://localhost:5173", 
-      "http://localhost:3000",
-      "https://money-marathon.vercel.app" // Add your actual frontend domain
-    ],
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "https://money-marathon.vercel.app",
+      ];
+      console.log("CORS Origin Received:", origin); // Debug log
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, origin || true);
+      } else {
+        console.error("CORS Error: Origin not allowed:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
@@ -72,29 +88,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     optionsSuccessStatus: 200
   }));
 
-  // Session configuration - FIXED for Cross-Origin, with Postgres store
+  // Session configuration
   app.use(session({
     secret: process.env.SESSION_SECRET || 'your-super-secret-key-change-this-in-production',
     resave: false,
     saveUninitialized: false,
     store: new PgSession({
-      conString: process.env.DATABASE_URL, // Use your Postgres connection string
-      tableName: 'sessions', // Custom table name (default is 'session')
-      createTableIfMissing: true, // Automatically create the table if it doesn't exist
+      pool: pgPool, // Use the pg Pool
+      tableName: 'sessions',
+      createTableIfMissing: true,
       ttl: 24 * 60 * 60, // 24 hours in seconds
-      schemaName: 'public', // Adjust if your schema is different
+      schemaName: 'public',
     }),
     cookie: {
       httpOnly: true,
-      // CRITICAL: For cross-origin setup, always use secure: true with sameSite: 'none'
-      // This requires HTTPS on both frontend and backend in production
-      secure: true,
-      sameSite: 'none',
+      secure: process.env.NODE_ENV === 'production' ? true : false, // Allow HTTP in development
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
     name: "sessionId",
   }));
-
   app.use(passport.initialize());
   app.use(passport.session());
 
