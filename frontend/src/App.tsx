@@ -1,4 +1,5 @@
- import { Switch, Route } from "wouter";
+// App.tsx
+import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -9,6 +10,37 @@ import Dashboard from "@/pages/dashboard";
 import PlanDetails from "@/pages/plan-details";
 import { useAuth } from "@/hooks/use-auth";
 import { Navbar } from "@/components/layout/navbar";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+
+function ErrorBoundary({ children }: { children: React.ReactNode }) {
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    const handleError = (error: any) => {
+      console.error("ErrorBoundary caught error:", error);
+      setHasError(true);
+    };
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
+
+  if (hasError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-destructive">Something went wrong</h1>
+          <p className="text-muted-foreground mt-2">Please try again or contact support.</p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Reload Page
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
 
 function AuthenticatedApp() {
   return (
@@ -26,7 +58,6 @@ function AuthenticatedApp() {
 function Router() {
   const { user, isLoading, hasChecked } = useAuth();
 
-  // Show loading spinner while checking authentication
   if (isLoading || !hasChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -38,13 +69,15 @@ function Router() {
     );
   }
 
-  // Show login page only after we've confirmed user is not authenticated
   if (!user) {
     return <Login />;
   }
 
-  // User is authenticated, show the app
-  return <AuthenticatedApp />;
+  return (
+    <ErrorBoundary>
+      <AuthenticatedApp />
+    </ErrorBoundary>
+  );
 }
 
 function App() {
