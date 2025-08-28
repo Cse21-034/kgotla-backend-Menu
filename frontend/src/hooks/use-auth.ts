@@ -8,6 +8,7 @@ export function useAuth() {
     queryFn: getQueryFn({ on401: 'returnNull' }),
     retry: false,
     refetchOnWindowFocus: false,
+    staleTime: 0, // Prevent caching
   });
 
   if (error || data === null) {
