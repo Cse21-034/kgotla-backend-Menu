@@ -1,6 +1,8 @@
+ 
+// components/auth/register-form.tsx
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { insertUserSchema, type InsertUser } from "@/types/schema";
 import { Button } from "@/components/ui/button";
@@ -8,10 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useLocation } from "wouter";
 
 export function RegisterForm() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   const {
     register,
@@ -27,11 +30,11 @@ export function RegisterForm() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
         title: "Account created!",
         description: "Welcome to Money Marathon. You're now logged in.",
       });
+      setLocation("/"); // Redirect to dashboard
     },
     onError: (error: Error) => {
       toast({
