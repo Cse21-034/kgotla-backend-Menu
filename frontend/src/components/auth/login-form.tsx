@@ -1,7 +1,7 @@
 // components/auth/login-form.tsx
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { loginSchema, type LoginUser } from "@/types/schema";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { useLocation } from "wouter";
 export function LoginForm() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -26,6 +27,9 @@ export function LoginForm() {
   const loginMutation = useMutation({
     mutationFn: async (data: LoginUser) => {
       const response = await apiRequest("POST", "/api/auth/login", data);
+      if (!response.ok) {
+        throw new Error(`Login failed: ${response.statusText}`);
+      }
       return response.json();
     },
     onSuccess: (data) => {
@@ -36,9 +40,11 @@ export function LoginForm() {
         title: "Welcome back!",
         description: "You have been logged in successfully.",
       });
+      // Invalidate auth query to force refetch
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       setTimeout(() => {
         setLocation("/"); // Redirect to dashboard
-      }, 2000);
+      }, 1000); // Reduced delay to test faster
     },
     onError: (error: Error) => {
       console.error("Login error:", error);
