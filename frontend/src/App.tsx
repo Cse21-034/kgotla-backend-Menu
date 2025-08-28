@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+ import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -24,9 +24,10 @@ function AuthenticatedApp() {
 }
 
 function Router() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, hasChecked } = useAuth();
 
-  if (isLoading) {
+  // Show loading spinner while checking authentication
+  if (isLoading || !hasChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -37,10 +38,12 @@ function Router() {
     );
   }
 
+  // Show login page only after we've confirmed user is not authenticated
   if (!user) {
     return <Login />;
   }
 
+  // User is authenticated, show the app
   return <AuthenticatedApp />;
 }
 
