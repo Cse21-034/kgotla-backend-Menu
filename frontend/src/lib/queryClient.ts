@@ -5,7 +5,6 @@ const BASE_URL = (
   "https://money-marathon-backend.onrender.com"
 ).replace(/\/$/, "");
 
-
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -24,25 +23,30 @@ export async function apiRequest(
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
-
   await throwIfResNotOk(res);
   return res;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
+
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    // FIXED: Properly construct URL with BASE_URL
+    const endpoint = queryKey.join("/");
+    const url = endpoint.startsWith('http') ? endpoint : `${BASE_URL}${endpoint}`;
+    
+    console.log("🔍 Query URL:", url); // Debug log to verify correct URL
+    
+    const res = await fetch(url, {
       credentials: "include",
     });
-
+    
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
       return null;
     }
-
     await throwIfResNotOk(res);
     return await res.json();
   };
