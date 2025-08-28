@@ -1,4 +1,3 @@
- 
 // components/auth/register-form.tsx
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,14 +28,20 @@ export function RegisterForm() {
       const response = await apiRequest("POST", "/api/auth/register", data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Register response:", data);
+      localStorage.setItem('jwt_token', data.token);
+      console.log("JWT stored in localStorage:", localStorage.getItem('jwt_token'));
       toast({
         title: "Account created!",
         description: "Welcome to Money Marathon. You're now logged in.",
       });
-      setLocation("/"); // Redirect to dashboard
+      setTimeout(() => {
+        setLocation("/"); // Redirect to dashboard
+      }, 2000);
     },
     onError: (error: Error) => {
+      console.error("Register error:", error);
       toast({
         title: "Registration failed",
         description: error.message,
