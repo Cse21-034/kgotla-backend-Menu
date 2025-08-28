@@ -28,14 +28,20 @@ export function LoginForm() {
       const response = await apiRequest("POST", "/api/auth/login", data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Login response:", data);
+      localStorage.setItem('jwt_token', data.token);
+      console.log("JWT stored in localStorage:", localStorage.getItem('jwt_token'));
       toast({
         title: "Welcome back!",
         description: "You have been logged in successfully.",
       });
-      setLocation("/"); // Redirect to dashboard
+      setTimeout(() => {
+        setLocation("/"); // Redirect to dashboard
+      }, 2000);
     },
     onError: (error: Error) => {
+      console.error("Login error:", error);
       toast({
         title: "Login failed",
         description: error.message,
@@ -89,4 +95,4 @@ export function LoginForm() {
       </Button>
     </form>
   );
-} 
+}
