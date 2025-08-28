@@ -57,8 +57,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 // CORS configuration
 app.use(cors({
   origin: [
-    "http://localhost:3000",
-    "http://localhost:5173", // Vite dev server
     "https://money-marathon.vercel.app", // Add your actual Vercel domain
     process.env.CORS_ORIGIN
   ].filter(Boolean),
@@ -77,7 +75,7 @@ app.use(session({
   cookie: { 
     secure: process.env.NODE_ENV === "production", // HTTPS only in production
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Allow cross-site
+    sameSite: "none",// Allow cross-site
     httpOnly: true, // Security: prevent XSS
     domain: process.env.NODE_ENV === "production" ? undefined : undefined // Don't set domain
   },
