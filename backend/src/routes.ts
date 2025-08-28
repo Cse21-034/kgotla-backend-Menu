@@ -1,6 +1,8 @@
- import type { Express } from "express";
+// routes.ts (updated with Postgres session store)
+import type { Express } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcrypt";
@@ -9,6 +11,9 @@ import cors from "cors";
 import { storage } from "./storage";
 import { insertUserSchema, loginSchema, insertPlanSchema, updateDayResultSchema, restartPlanSchema } from "./schema";
 import { generatePlanEntries, recalculatePlanFromDay } from "./lib/calculations";
+
+// Configure Postgres session store
+const PgSession = connectPgSimple(session);
 
 // Configure Passport
 passport.use(new LocalStrategy(
@@ -67,11 +72,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     optionsSuccessStatus: 200
   }));
 
-  // Session configuration - FIXED for Cross-Origin
+  // Session configuration - FIXED for Cross-Origin, with Postgres store
   app.use(session({
     secret: process.env.SESSION_SECRET || 'your-super-secret-key-change-this-in-production',
     resave: false,
     saveUninitialized: false,
+    store: new PgSession({
+      conString: process.env.DATABASE_URL, // Use your Postgres connection string
+      tableName: 'sessions', // Custom table name (default is 'session')
+      createTableIfMissing: true, // Automatically create the table if it doesn't exist
+      ttl: 24 * 60 * 60, // 24 hours in seconds
+      schemaName: 'public', // Adjust if your schema is different
+    }),
     cookie: {
       httpOnly: true,
       // CRITICAL: For cross-origin setup, always use secure: true with sameSite: 'none'
