@@ -38,7 +38,7 @@ export default function Dashboard() {
       {/* Banner Ad - Top */}
       <div className="bg-accent text-center py-2 text-sm text-accent-foreground">
         <p>Advertisement Banner Here</p> 
-        {/* Integrate ad script or image here, e.g., <img src="banner-ad.png" alt="Ad" /> */}
+        <img src="https://iili.io/K3gpQ6J.png" alt="Ad" />  
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
