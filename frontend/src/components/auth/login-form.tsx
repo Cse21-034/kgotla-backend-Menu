@@ -27,14 +27,12 @@ export function LoginForm() {
       return response.json();
     },
     onSuccess: () => {
-     // Delay refetch to ensure cookie is set
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      }, 1000); // 1-second delay
+      
       toast({
         title: "Welcome back!",
         description: "You have been logged in successfully.",
       });
+      navigate("/"); // Redirect to dashboard
     },
     onError: (error: Error) => {
       toast({
