@@ -1,3 +1,4 @@
+// components/dashboard/create-plan-form.tsx
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -73,8 +74,8 @@ export function CreatePlanForm({ onSuccess }: CreatePlanFormProps) {
   };
 
   return (
-    <div className="bg-card rounded-lg border border-border p-6">
-      <h3 className="text-lg font-semibold text-foreground mb-6">Create New Plan</h3>
+    <div className="bg-card rounded-lg border border-border p-6 shadow-md">
+      <h3 className="text-lg font-semibold text-foreground mb-6 text-center sm:text-left">Create New Plan</h3>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <Label htmlFor="name">Plan Name</Label>
@@ -83,13 +84,14 @@ export function CreatePlanForm({ onSuccess }: CreatePlanFormProps) {
             placeholder="e.g., January Money Plan"
             {...register("name")}
             data-testid="input-plan-name"
+            className="rounded-md"
           />
           {errors.name && (
             <p className="text-sm text-destructive">{errors.name.message}</p>
           )}
         </div>
         
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="startWager">Start Wager</Label>
             <div className="relative">
@@ -98,7 +100,7 @@ export function CreatePlanForm({ onSuccess }: CreatePlanFormProps) {
                 id="startWager"
                 type="number"
                 placeholder="100"
-                className="pl-8"
+                className="pl-8 rounded-md"
                 {...register("startWager", { valueAsNumber: true })}
                 data-testid="input-start-wager"
               />
@@ -115,6 +117,7 @@ export function CreatePlanForm({ onSuccess }: CreatePlanFormProps) {
               type="number"
               step="0.01"
               placeholder="1.50"
+              className="rounded-md"
               {...register("odds", { valueAsNumber: true })}
               data-testid="input-odds"
             />
@@ -130,7 +133,7 @@ export function CreatePlanForm({ onSuccess }: CreatePlanFormProps) {
             onValueChange={(value) => setValue("days", parseInt(value))}
             defaultValue="30"
           >
-            <SelectTrigger data-testid="select-duration">
+            <SelectTrigger data-testid="select-duration" className="rounded-md">
               <SelectValue placeholder="Select duration" />
             </SelectTrigger>
             <SelectContent>
@@ -156,7 +159,7 @@ export function CreatePlanForm({ onSuccess }: CreatePlanFormProps) {
         
         <Button 
           type="submit" 
-          className="w-full"
+          className="w-full rounded-md"
           disabled={createPlanMutation.isPending}
           data-testid="button-generate-plan"
         >
@@ -164,6 +167,12 @@ export function CreatePlanForm({ onSuccess }: CreatePlanFormProps) {
           Generate Plan
         </Button>
       </form>
+
+      {/* Ad Banner Below Form */}
+      <div className="mt-4 bg-accent text-center py-2 text-sm text-accent-foreground rounded-md">
+        <p>Advertisement Here</p>
+        {/* Integrate ad script or image here */}
+      </div>
     </div>
   );
 }
