@@ -1,3 +1,4 @@
+ // lib/queryClient.ts
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 const BASE_URL = (
@@ -17,35 +18,35 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  console.log("API Request:", method, url, "Data:", data);
   const res = await fetch(`${BASE_URL}${url}`, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
+  console.log("API Response Status:", res.status, "Headers:", Object.fromEntries(res.headers));
   await throwIfResNotOk(res);
   return res;
 }
-
-type UnauthorizedBehavior = "returnNull" | "throw";
 
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // FIXED: Properly construct URL with BASE_URL
     const endpoint = queryKey.join("/");
-    const url = endpoint.startsWith('http') ? endpoint : `${BASE_URL}${endpoint}`;
+    const url = endpoint.startsWith("http") ? endpoint : `${BASE_URL}${endpoint}`;
     
-    console.log("🔍 Query URL:", url); // Debug log to verify correct URL
-    
+    console.log("🔍 Query URL:", url);
     const res = await fetch(url, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
       credentials: "include",
     });
-    console.log("Request Cookies:", document.cookie); // Log cookies sent by browser
-  console.log("Response Headers:", Object.fromEntries(res.headers)); // Log response headers
+    console.log("Response Status:", res.status, "Headers:", Object.fromEntries(res.headers));
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+      console.log("Received 401, returning null");
       return null;
     }
     await throwIfResNotOk(res);
