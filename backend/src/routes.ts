@@ -91,7 +91,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     store: new PgSession({
       pool: pgPool,
       tableName: 'sessions',
-      createTableIfMissing: true,
+      createTableIfMissing: false, // Let Drizzle manage the table
       ttl: 24 * 60 * 60,
       schemaName: 'public',
     }),
