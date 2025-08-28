@@ -56,10 +56,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // CORS configuration
 // CORS configuration
 app.use(cors({
-  origin: [
-    "https://money-marathon.vercel.app", // Add your actual Vercel domain
-    process.env.CORS_ORIGIN
-  ].filter(Boolean),
+  origin: 
+    process.env.CORS_ORIGIN,
   credentials: true, // CRITICAL: Allow cookies
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
@@ -69,18 +67,18 @@ app.use(cors({
 
 // Session configuration
 app.use(session({
-  secret: process.env.SESSION_SECRET || "your-secret-key",
+  secret: process.env.SESSION_SECRET!,
   resave: false,
   saveUninitialized: false,
-  cookie: { 
-    secure: process.env.NODE_ENV === "production", // HTTPS only in production
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: "none",// Allow cross-site
-    httpOnly: true, // Security: prevent XSS
-    domain: process.env.NODE_ENV === "production" ? undefined : undefined // Don't set domain
+  cookie: {
+    httpOnly: true,
+    secure: true,      // required for cross-site cookies in HTTPS
+    sameSite: "none",  // allows cross-site cookies
+    maxAge: 24 * 60 * 60 * 1000,
   },
-  name: 'sessionId' // Custom name to avoid conflicts
+  name: "sessionId",
 }));
+
 
   app.use(passport.initialize());
   app.use(passport.session());
