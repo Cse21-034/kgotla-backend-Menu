@@ -88,26 +88,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 app.post("/api/auth/register", async (req, res) => {
   try {
+    console.log("Registration attempt:", { email: req.body.email, name: req.body.name });
+    
+    // Check if session secret exists
+    if (!process.env.SESSION_SECRET && !req.sessionStore) {
+      console.error("SESSION_SECRET not configured");
+      return res.status(500).json({ message: "Server configuration error" });
+    }
+
     const { name, email, password } = insertUserSchema.parse(req.body);
 
     const existingUser = await storage.getUserByEmail(email);
-    if (existingUser) return res.status(400).json({ message: "User already exists" });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
 
+    console.log("Creating user hash...");
     const passwordHash = await bcrypt.hash(password, 10);
 
+    console.log("Storing user in database...");
     const user = await storage.createUser({ name, email, passwordHash });
+    console.log("User created successfully:", user.id);
 
     // Auto-login
     req.login(user, (err) => {
-      if (err) return res.status(500).json({ message: "Login failed after registration" });
-      res.status(201).json({ user: { id: user.id, name: user.name, email: user.email } });
+      if (err) {
+        console.error("Login error after registration:", err);
+        return res.status(500).json({ message: "Login failed after registration" });
+      }
+      console.log("User logged in successfully");
+      res.status(201).json({ 
+        user: { id: user.id, name: user.name, email: user.email } 
+      });
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.errors);
       return res.status(400).json({ message: error.errors[0].message });
     }
-    console.error("Registration error:", error);
-    res.status(500).json({ message: "Registration failed" });
+    console.error("Registration error details:", error);
+    res.status(500).json({ 
+      message: "Registration failed",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
