@@ -1,9 +1,8 @@
-// routes.ts (updated with Postgres session store)
-import type { Express } from "express";
+ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
-import { Pool } from "pg"; // Add this
+import { Pool } from "pg";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcrypt";
@@ -13,7 +12,6 @@ import { storage } from "./storage";
 import { insertUserSchema, loginSchema, insertPlanSchema, updateDayResultSchema, restartPlanSchema } from "./schema";
 import { generatePlanEntries, recalculatePlanFromDay } from "./lib/calculations";
 
-// Configure Postgres session store
 // Configure Postgres session store
 const PgSession = connectPgSimple(session);
 const pgPool = new Pool({
@@ -64,8 +62,6 @@ function requireAuth(req: any, res: any, next: any) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // CORS configuration - FIXED
-  // CORS configuration
   app.use(cors({
     origin: (origin, callback) => {
       const allowedOrigins = [
@@ -73,7 +69,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "http://localhost:3000",
         "https://money-marathon.vercel.app",
       ];
-      console.log("CORS Origin Received:", origin); // Debug log
+      console.log("CORS Origin Received:", origin);
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, origin || true);
       } else {
@@ -88,35 +84,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     optionsSuccessStatus: 200
   }));
 
-  // Session configuration
   app.use(session({
     secret: process.env.SESSION_SECRET || 'your-super-secret-key-change-this-in-production',
     resave: false,
     saveUninitialized: false,
     store: new PgSession({
-      pool: pgPool, // Use the pg Pool
+      pool: pgPool,
       tableName: 'sessions',
       createTableIfMissing: true,
-      ttl: 24 * 60 * 60, // 24 hours in seconds
+      ttl: 24 * 60 * 60,
       schemaName: 'public',
     }),
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production' ? true : false, // Allow HTTP in development
+      secure: process.env.NODE_ENV === 'production' ? true : false,
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 24 * 60 * 60 * 1000,
     },
     name: "sessionId",
   }));
+
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Health check endpoint
   app.get("/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
-  // Debug middleware to log session info
   app.use((req, res, next) => {
     console.log("Session ID:", req.sessionID);
     console.log("Is Authenticated:", req.isAuthenticated ? req.isAuthenticated() : false);
@@ -127,15 +121,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/register", async (req, res) => {
     try {
       console.log("Registration attempt:", { email: req.body.email, name: req.body.name });
-      
-      // Check if session secret exists
-      if (!process.env.SESSION_SECRET && !req.sessionStore) {
+      if (!process.env.SESSION_SECRET) {
         console.error("SESSION_SECRET not configured");
         return res.status(500).json({ message: "Server configuration error" });
       }
 
       const { name, email, password } = insertUserSchema.parse(req.body);
-
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
         return res.status(400).json({ message: "User already exists" });
@@ -143,21 +134,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("Creating user hash...");
       const passwordHash = await bcrypt.hash(password, 10);
-
       console.log("Storing user in database...");
       const user = await storage.createUser({ name, email, passwordHash });
       console.log("User created successfully:", user.id);
 
-      // Auto-login
       req.login(user, (err) => {
         if (err) {
           console.error("Login error after registration:", err);
           return res.status(500).json({ message: "Login failed after registration" });
         }
         console.log("User logged in successfully, session:", req.sessionID);
-        res.status(201).json({ 
-          user: { id: user.id, name: user.name, email: user.email } 
-        });
+        res.status(201).json({ user: { id: user.id, name: user.name, email: user.email } });
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -165,10 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: error.errors[0].message });
       }
       console.error("Registration error details:", error);
-      res.status(500).json({ 
-        message: "Registration failed",
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
-      });
+      res.status(500).json({ message: "Registration failed", error: process.env.NODE_ENV === 'development' ? error.message : undefined });
     }
   });
 
@@ -225,22 +209,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Plan routes
   app.post("/api/plans", requireAuth, async (req, res) => {
     try {
       const planData = insertPlanSchema.parse(req.body);
       const user = req.user as any;
-
-      // Create plan
-      const plan = await storage.createPlan({
-        ...planData,
-        userId: user.id
-      });
-
-      // Generate day entries
+      const plan = await storage.createPlan({ ...planData, userId: user.id });
       const entries = generatePlanEntries(plan);
       await storage.createDayEntries(entries);
-
       res.json({ plan });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -264,17 +239,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const plan = await storage.getPlanById(id);
-      
       if (!plan) {
         return res.status(404).json({ message: "Plan not found" });
       }
-
-      // Check ownership
       const user = req.user as any;
       if (plan.userId !== user.id) {
         return res.status(403).json({ message: "Access denied" });
       }
-
       const dayEntries = await storage.getDayEntriesByPlanId(id);
       res.json({ plan, dayEntries });
     } catch (error) {
@@ -286,17 +257,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const plan = await storage.getPlanById(id);
-      
       if (!plan) {
         return res.status(404).json({ message: "Plan not found" });
       }
-
-      // Check ownership
       const user = req.user as any;
       if (plan.userId !== user.id) {
         return res.status(403).json({ message: "Access denied" });
       }
-
       await storage.deletePlan(id);
       res.json({ message: "Plan deleted successfully" });
     } catch (error) {
@@ -304,37 +271,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Day entry routes
   app.patch("/api/plans/:id/days/:day", requireAuth, async (req, res) => {
     try {
       const { id, day } = req.params;
       const { result } = updateDayResultSchema.parse(req.body);
-      
       const plan = await storage.getPlanById(id);
       if (!plan) {
         return res.status(404).json({ message: "Plan not found" });
       }
-
-      // Check ownership
       const user = req.user as any;
       if (plan.userId !== user.id) {
         return res.status(403).json({ message: "Access denied" });
       }
-
       await storage.updateDayResult(id, parseInt(day), result);
-
-      // If loss, stop the plan
       if (result === "loss") {
         await storage.updatePlanStatus(id, "stopped");
       }
-
-      // Check if plan is completed
       const dayEntries = await storage.getDayEntriesByPlanId(id);
       const completedDays = dayEntries.filter(entry => entry.result === "win").length;
       if (completedDays === plan.days) {
         await storage.updatePlanStatus(id, "completed");
       }
-
       res.json({ message: "Day result updated successfully" });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -348,30 +305,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const { day } = restartPlanSchema.parse(req.body);
-      
       const plan = await storage.getPlanById(id);
       if (!plan) {
         return res.status(404).json({ message: "Plan not found" });
       }
-
-      // Check ownership
       const user = req.user as any;
       if (plan.userId !== user.id) {
         return res.status(403).json({ message: "Access denied" });
       }
-
-      // Delete entries from restart day onwards
       await storage.deleteDayEntriesFromDay(id, day);
-
-      // Regenerate entries from restart day
       const newEntries = recalculatePlanFromDay(plan, day);
       await storage.createDayEntries(newEntries);
-
-      // Reactivate plan if it was stopped
       if (plan.status === "stopped") {
         await storage.updatePlanStatus(id, "active");
       }
-
       res.json({ message: "Plan restarted successfully" });
     } catch (error) {
       if (error instanceof z.ZodError) {
