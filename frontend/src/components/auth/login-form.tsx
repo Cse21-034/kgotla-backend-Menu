@@ -1,6 +1,7 @@
+// components/auth/login-form.tsx
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { loginSchema, type LoginUser } from "@/types/schema";
 import { Button } from "@/components/ui/button";
@@ -8,17 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-
-import { useNavigate } from "wouter";
-
- 
-   
+import { useLocation } from "wouter";
 
 export function LoginForm() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-const navigate = useNavigate();
-  
+  const [, setLocation] = useLocation();
+
   const {
     register,
     handleSubmit,
@@ -33,12 +29,11 @@ const navigate = useNavigate();
       return response.json();
     },
     onSuccess: () => {
-      
       toast({
         title: "Welcome back!",
         description: "You have been logged in successfully.",
       });
-      navigate("/"); // Redirect to dashboard
+      setLocation("/"); // Redirect to dashboard
     },
     onError: (error: Error) => {
       toast({
@@ -94,4 +89,4 @@ const navigate = useNavigate();
       </Button>
     </form>
   );
-}
+} 
