@@ -27,7 +27,10 @@ export function LoginForm() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+     // Delay refetch to ensure cookie is set
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      }, 1000); // 1-second delay
       toast({
         title: "Welcome back!",
         description: "You have been logged in successfully.",
