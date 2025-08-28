@@ -181,12 +181,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/plans", requireAuth, async (req, res) => {
+app.get("/api/plans", requireAuth, async (req, res) => {
     try {
       const user = req.user as any;
+      console.log("GET /api/plans: Fetching plans for user:", user.id);
       const plans = await storage.getPlansByUserId(user.id);
-      res.json({ plans });
+      console.log("GET /api/plans: Plans fetched:", plans);
+      res.json({ plans: plans || [] }); // Ensure empty array
     } catch (error) {
+      console.error("GET /api/plans: Error:", error);
       res.status(500).json({ message: "Failed to fetch plans" });
     }
   });
