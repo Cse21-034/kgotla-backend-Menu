@@ -120,74 +120,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   });
 
-  app.post("/api/auth/register", async (req, res) => {
-    try {
-      console.log("Registration attempt:", { email: req.body.email, name: req.body.name });
-      if (!process.env.SESSION_SECRET) {
-        console.error("SESSION_SECRET not configured");
-        return res.status(500).json({ message: "Server configuration error" });
-      }
-
-      const { name, email, password } = insertUserSchema.parse(req.body);
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser) {
-        return res.status(400).json({ message: "User already exists" });
-      }
-
-      console.log("Creating user hash...");
-      const passwordHash = await bcrypt.hash(password, 10);
-      console.log("Storing user in database...");
-      const user = await storage.createUser({ name, email, passwordHash });
-      console.log("User created successfully:", user.id);
-
-      req.login(user, (err) => {
-        if (err) {
-          console.error("Login error after registration:", err);
-          return res.status(500).json({ message: "Login failed after registration" });
-        }
-        console.log("User logged in successfully, session:", req.sessionID);
-        res.status(201).json({ user: { id: user.id, name: user.name, email: user.email } });
-      });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        console.error("Validation error:", error.errors);
-        return res.status(400).json({ message: error.errors[0].message });
-      }
-      console.error("Registration error details:", error);
-      res.status(500).json({ message: "Registration failed", error: process.env.NODE_ENV === 'development' ? error.message : undefined });
-    }
-  });
-
-  app.post("/api/auth/login", (req, res, next) => {
-    try {
-      loginSchema.parse(req.body);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: error.errors[0].message });
-      }
+// routes.ts (partial update)
+app.post("/api/auth/register", async (req, res) => {
+  try {
+    console.log("Registration attempt:", { email: req.body.email, name: req.body.name });
+    if (!process.env.SESSION_SECRET) {
+      console.error("SESSION_SECRET not configured");
+      return res.status(500).json({ message: "Server configuration error" });
     }
 
-    passport.authenticate("local", (err: any, user: any, info: any) => {
+    const { name, email, password } = insertUserSchema.parse(req.body);
+    const existingUser = await storage.getUserByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    console.log("Creating user hash...");
+    const passwordHash = await bcrypt.hash(password, 10);
+    console.log("Storing user in database...");
+    const user = await storage.createUser({ name, email, passwordHash });
+    console.log("User created successfully:", user.id);
+
+    req.login(user, (err) => {
       if (err) {
-        console.error("Passport authentication error:", err);
+        console.error("Login error after registration:", err);
+        return res.status(500).json({ message: "Login failed after registration" });
+      }
+      console.log("User logged in successfully, session:", req.sessionID);
+      console.log("Set-Cookie header:", `sessionId=${req.sessionID}; HttpOnly; Secure; SameSite=None; Path=/; Domain=${process.env.NODE_ENV === 'production' ? 'money-marathon-backend.onrender.com' : 'localhost'}`);
+      res.status(201).json({ user: { id: user.id, name: user.name, email: user.email } });
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.errors);
+      return res.status(400).json({ message: error.errors[0].message });
+    }
+    console.error("Registration error details:", error);
+    res.status(500).json({ message: "Registration failed", error: process.env.NODE_ENV === 'development' ? error.message : undefined });
+  }
+});
+
+app.post("/api/auth/login", (req, res, next) => {
+  try {
+    loginSchema.parse(req.body);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: error.errors[0].message });
+    }
+  }
+
+  passport.authenticate("local", (err: any, user: any, info: any) => {
+    if (err) {
+      console.error("Passport authentication error:", err);
+      return res.status(500).json({ message: "Login failed" });
+    }
+    if (!user) {
+      console.log("Login failed for:", req.body.email, "Reason:", info?.message);
+      return res.status(401).json({ message: info.message || "Invalid credentials" });
+    }
+
+    req.login(user, (err) => {
+      if (err) {
+        console.error("Login session error:", err);
         return res.status(500).json({ message: "Login failed" });
       }
-      if (!user) {
-        console.log("Login failed for:", req.body.email, "Reason:", info?.message);
-        return res.status(401).json({ message: info.message || "Invalid credentials" });
-      }
-
-      req.login(user, (err) => {
-        if (err) {
-          console.error("Login session error:", err);
-          return res.status(500).json({ message: "Login failed" });
-        }
-        console.log("User logged in successfully:", user.id, "Session:", req.sessionID);
-        res.json({ user: { id: user.id, name: user.name, email: user.email } });
-      });
-    })(req, res, next);
-  });
-
+      console.log("User logged in successfully:", user.id, "Session:", req.sessionID);
+      console.log("Set-Cookie header:", `sessionId=${req.sessionID}; HttpOnly; Secure; SameSite=None; Path=/; Domain=${process.env.NODE_ENV === 'production' ? 'money-marathon-backend.onrender.com' : 'localhost'}`);
+      res.json({ user: { id: user.id, name: user.name, email: user.email } });
+    });
+  })(req, res, next);
+});
+ 
   app.post("/api/auth/logout", (req, res) => {
     req.logout((err) => {
       if (err) {
