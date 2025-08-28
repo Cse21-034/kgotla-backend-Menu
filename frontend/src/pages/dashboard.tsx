@@ -4,9 +4,106 @@ import { PlanCard } from "@/components/dashboard/plan-card";
 import { CreatePlanForm } from "@/components/dashboard/create-plan-form";
 import { AnalyticsCharts } from "@/components/analytics/analytics-charts";
 import { usePlans } from "@/hooks/use-plans";
-import { Plus } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+// Image Carousel Component
+function ImageCarousel() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  
+  // Array of images for the carousel
+  const images = [
+    {
+      src: "https://iili.io/K3gpQ6J.png",
+      alt: "Ad Image 1"
+    },
+    {
+      src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
+      alt: "Ad Image 2"
+    },
+    {
+      src: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop",
+      alt: "Ad Image 3"
+    }
+  ];
+
+  // Auto-advance carousel every 4 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => 
+        prevIndex === images.length - 1 ? 0 : prevIndex + 1
+      );
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [images.length]);
+
+  const goToPrevious = () => {
+    setCurrentIndex(currentIndex === 0 ? images.length - 1 : currentIndex - 1);
+  };
+
+  const goToNext = () => {
+    setCurrentIndex(currentIndex === images.length - 1 ? 0 : currentIndex + 1);
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentIndex(index);
+  };
+
+  return (
+    <div className="bg-accent text-center py-4 border-b">
+      <p className="text-sm text-accent-foreground mb-3 font-medium">Advertisement Banner</p>
+      
+      {/* Carousel Container */}
+      <div className="relative max-w-md mx-auto bg-background rounded-lg shadow-md overflow-hidden">
+        {/* Image Display */}
+        <div className="relative h-48 w-full overflow-hidden">
+          <img 
+            src={images[currentIndex].src} 
+            alt={images[currentIndex].alt}
+            className="w-full h-full object-cover transition-opacity duration-300"
+          />
+          
+          {/* Navigation Arrows */}
+          <button
+            onClick={goToPrevious}
+            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-70 transition-all"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          
+          <button
+            onClick={goToNext}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-70 transition-all"
+          >
+            <ChevronRight size={20} />
+          </button>
+
+          {/* Image Counter */}
+          <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+            {currentIndex + 1} / {images.length}
+          </div>
+        </div>
+        
+        {/* Dot Indicators */}
+        <div className="flex justify-center space-x-2 py-3 bg-muted/30">
+          {images.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`w-2 h-2 rounded-full transition-all ${
+                index === currentIndex 
+                  ? 'bg-primary scale-125' 
+                  : 'bg-muted-foreground/40 hover:bg-muted-foreground/60'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { data, isLoading } = usePlans();
@@ -35,11 +132,8 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Banner Ad - Top */}
-      <div className="bg-accent text-center py-2 text-sm text-accent-foreground">
-        <p>Advertisement Banner Here</p> 
-        <img src="https://iili.io/K3gpQ6J.png" alt="Ad" />  
-      </div>
+      {/* Banner Ad with Carousel - Top */}
+      <ImageCarousel />
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
