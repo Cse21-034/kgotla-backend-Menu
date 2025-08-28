@@ -67,17 +67,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     optionsSuccessStatus: 200
   }));
 
-  // Session configuration - FIXED
+  // Session configuration - FIXED for Cross-Origin
   app.use(session({
     secret: process.env.SESSION_SECRET || 'your-super-secret-key-change-this-in-production',
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      // IMPORTANT: Only set secure: true in production with HTTPS
-      secure: process.env.NODE_ENV === 'production',
-      // IMPORTANT: Use 'lax' for same-site in development, 'none' only for cross-origin in production with HTTPS
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      // CRITICAL: For cross-origin setup, always use secure: true with sameSite: 'none'
+      // This requires HTTPS on both frontend and backend in production
+      secure: true,
+      sameSite: 'none',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
     name: "sessionId",
