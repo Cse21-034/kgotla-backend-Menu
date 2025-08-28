@@ -1,13 +1,20 @@
-import { useQuery } from "@tanstack/react-query";
-import { Plan } from "@/types/schema";
-
-interface PlansResponse {
-  plans: Plan[];
-}
+// hooks/use-plans.ts
+import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 export function usePlans() {
-  return useQuery<Plan[]>({
-    queryKey: ["/api/plans"],
-    select: (data: any) => data?.plans || [],
+  return useQuery({
+    queryKey: ['/api/plans'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/plans');
+      if (response.status === 401) {
+        localStorage.removeItem('jwt_token');
+        return null;
+      }
+      return response.json();
+    },
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000,
   });
 }
