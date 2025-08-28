@@ -11,6 +11,10 @@ export function useAuth() {
     queryKey: ["/api/auth/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
+    // Add these options to handle the authentication state properly
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   return {
@@ -18,5 +22,7 @@ export function useAuth() {
     isLoading,
     error,
     isAuthenticated: !!data?.user,
+    // Add this to differentiate between loading and unauthenticated
+    hasChecked: !isLoading,
   };
-}
+} 
