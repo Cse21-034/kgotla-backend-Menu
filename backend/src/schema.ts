@@ -1,7 +1,5 @@
- 
-// schema.ts (unchanged, but you can optionally add the sessions table for Drizzle migrations if using them)
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, decimal, integer, timestamp, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, decimal, integer, timestamp, pgEnum, json } from "drizzle-orm/pg-core"; // Explicitly import json
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -37,7 +35,6 @@ export const dayEntries = pgTable("day_entries", {
   result: dayResultEnum("result").default("pending").notNull(),
 });
 
-// Optional: Add sessions table schema for reference (connect-pg-simple creates it automatically)
 export const sessions = pgTable("sessions", {
   sid: varchar("sid").primaryKey().notNull(),
   sess: json("sess").notNull(),
@@ -61,7 +58,7 @@ export const insertUserSchema = createInsertSchema(users)
   .omit({
     id: true,
     createdAt: true,
-    passwordHash: true,   // 👈 omit this so frontend doesn’t need to send it
+    passwordHash: true,
   })
   .extend({
     password: z.string().min(6, "Password must be at least 6 characters"),
@@ -98,4 +95,4 @@ export type Plan = typeof plans.$inferSelect;
 export type InsertPlan = z.infer<typeof insertPlanSchema>;
 export type DayEntry = typeof dayEntries.$inferSelect;
 export type UpdateDayResult = z.infer<typeof updateDayResultSchema>;
-export type RestartPlan = z.infer<typeof restartPlanSchema>;
+export type RestartPlan = z.infer<typeof restartPlanSchema>; 
