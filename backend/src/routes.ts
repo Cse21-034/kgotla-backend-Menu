@@ -101,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 24 * 60 * 60 * 1000,
      path: '/',
-      domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined, // Allow cookie for subdomains
+      domain: process.env.NODE_ENV === 'production' ? 'https://money-marathon-backend.onrender.com' : undefined, // Allow cookie for subdomains
     },
     name: "sessionId",
   }));
