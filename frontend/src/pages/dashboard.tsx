@@ -1,3 +1,4 @@
+// pages/dashboard.tsx
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { PlanCard } from "@/components/dashboard/plan-card";
 import { CreatePlanForm } from "@/components/dashboard/create-plan-form";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 export default function Dashboard() {
-  const { data: plans, isLoading } = usePlans();
+  const { data, isLoading } = usePlans();
   const [showCreateForm, setShowCreateForm] = useState(false);
 
   if (isLoading) {
@@ -26,9 +27,11 @@ export default function Dashboard() {
     );
   }
 
-  const activePlans = plans?.filter((plan: any) => plan.status === "active") || [];
-  const completedPlans = plans?.filter((plan: any) => plan.status === "completed") || [];
-  const stoppedPlans = plans?.filter((plan: any) => plan.status === "stopped") || [];
+  // Ensure plans is an array
+  const plansArray = Array.isArray(data?.plans) ? data.plans : [];
+  const activePlans = plansArray.filter((plan: any) => plan.status === "active");
+  const completedPlans = plansArray.filter((plan: any) => plan.status === "completed");
+  const stoppedPlans = plansArray.filter((plan: any) => plan.status === "stopped");
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -49,7 +52,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      <StatsCards plans={(plans as any) || []} />
+      <StatsCards plans={plansArray} />
 
       {/* Plans Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -88,7 +91,7 @@ export default function Dashboard() {
       </div>
 
       {/* Analytics */}
-      <AnalyticsCharts plans={(plans as any) || []} />
+      <AnalyticsCharts plans={plansArray} />
     </div>
   );
 }
