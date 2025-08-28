@@ -52,8 +52,8 @@ function ImageCarousel() {
   };
 
   return (
-    <div className="bg-accent text-center py-4 border-b">
-      <p className="text-sm text-accent-foreground mb-3 font-medium">Advertisement Banner</p>
+    <div className="bg-white text-center py-4 border-b">
+      
       
       {/* Carousel Container */}
       <div className="relative max-w-md mx-auto bg-background rounded-lg shadow-md overflow-hidden">
