@@ -1,4 +1,4 @@
-{
+ {
   "name": "money-marathon-backend",
   "version": "1.0.0",
   "type": "module",
@@ -6,11 +6,11 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "NODE_ENV=development tsx src/index.ts",
-    "build": "esbuild src/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --minify",
+    "build": "esbuild src/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "postinstall": "npm run db:generate && npm run db:push" 
+    "postinstall": "npm run db:push"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
