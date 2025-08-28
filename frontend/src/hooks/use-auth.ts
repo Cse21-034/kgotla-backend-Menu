@@ -11,10 +11,12 @@ export function useAuth() {
   });
 
   if (error || data === null) {
+    console.log("useAuth: No user authenticated, error:", error);
     localStorage.removeItem('jwt_token');
     return { user: null, isLoading: false, hasChecked: true };
   }
 
+  console.log("useAuth: User authenticated:", data?.user);
   return {
     user: data?.user || null,
     isLoading,
