@@ -97,11 +97,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }),
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production' ? true : false,
+      secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 24 * 60 * 60 * 1000,
-     path: '/',
-      domain: process.env.NODE_ENV === 'production' ? 'https://money-marathon-backend.onrender.com' : undefined, // Allow cookie for subdomains
+     
     },
     name: "sessionId",
   }));
