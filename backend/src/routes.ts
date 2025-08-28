@@ -1,4 +1,4 @@
- import type { Express } from "express";
+import type { Express } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
@@ -62,6 +62,7 @@ function requireAuth(req: any, res: any, next: any) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Fixed CORS configuration
   app.use(cors({
     origin: (origin, callback) => {
       const allowedOrigins = [
@@ -70,8 +71,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "https://money-marathon.vercel.app",
       ];
       console.log("CORS Origin Received:", origin);
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, origin || true);
+      
+      // Handle same-origin requests (origin will be undefined)
+      if (!origin) {
+        return callback(null, true);
+      }
+      
+      if (allowedOrigins.includes(origin)) {
+        callback(null, origin);
       } else {
         console.error("CORS Error: Origin not allowed:", origin);
         callback(new Error("Not allowed by CORS"));
@@ -84,6 +91,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     optionsSuccessStatus: 200
   }));
 
+  // Fixed session configuration
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   app.use(session({
     secret: process.env.SESSION_SECRET || 'your-super-secret-key-change-this-in-production',
     resave: false,
@@ -91,16 +101,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     store: new PgSession({
       pool: pgPool,
       tableName: 'sessions',
-      createTableIfMissing: true, // Let Drizzle manage the table
+      createTableIfMissing: true,
       ttl: 24 * 60 * 60,
       schemaName: 'public',
     }),
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      // For sameSite: 'none', secure MUST be true
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 24 * 60 * 60 * 1000,
-     
+      // Don't set domain for cross-origin cookies - let browser handle it
+      // domain: undefined
     },
     name: "sessionId",
   }));
@@ -116,79 +128,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log("Session ID:", req.sessionID);
     console.log("Is Authenticated:", req.isAuthenticated ? req.isAuthenticated() : false);
     console.log("User:", req.user?.id || 'None');
+    console.log("Request headers:", req.headers.cookie);
     next();
   });
 
-// routes.ts (partial update)
-app.post("/api/auth/register", async (req, res) => {
-  try {
-    console.log("Registration attempt:", { email: req.body.email, name: req.body.name });
-    if (!process.env.SESSION_SECRET) {
-      console.error("SESSION_SECRET not configured");
-      return res.status(500).json({ message: "Server configuration error" });
-    }
-
-    const { name, email, password } = insertUserSchema.parse(req.body);
-    const existingUser = await storage.getUserByEmail(email);
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
-    }
-
-    console.log("Creating user hash...");
-    const passwordHash = await bcrypt.hash(password, 10);
-    console.log("Storing user in database...");
-    const user = await storage.createUser({ name, email, passwordHash });
-    console.log("User created successfully:", user.id);
-
-    req.login(user, (err) => {
-      if (err) {
-        console.error("Login error after registration:", err);
-        return res.status(500).json({ message: "Login failed after registration" });
+  // Fixed register route with better cookie logging
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      console.log("Registration attempt:", { email: req.body.email, name: req.body.name });
+      if (!process.env.SESSION_SECRET) {
+        console.error("SESSION_SECRET not configured");
+        return res.status(500).json({ message: "Server configuration error" });
       }
-      console.log("User logged in successfully, session:", req.sessionID);
-      console.log("Set-Cookie header:", `sessionId=${req.sessionID}; HttpOnly; Secure; SameSite=None; Path=/; Domain=${process.env.NODE_ENV === 'production' ? 'money-marathon-backend.onrender.com' : 'localhost'}`);
-      res.status(201).json({ user: { id: user.id, name: user.name, email: user.email } });
-    });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      console.error("Validation error:", error.errors);
-      return res.status(400).json({ message: error.errors[0].message });
-    }
-    console.error("Registration error details:", error);
-    res.status(500).json({ message: "Registration failed", error: process.env.NODE_ENV === 'development' ? error.message : undefined });
-  }
-});
 
-app.post("/api/auth/login", (req, res, next) => {
-  try {
-    loginSchema.parse(req.body);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: error.errors[0].message });
-    }
-  }
+      const { name, email, password } = insertUserSchema.parse(req.body);
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists" });
+      }
 
-  passport.authenticate("local", (err: any, user: any, info: any) => {
-    if (err) {
-      console.error("Passport authentication error:", err);
-      return res.status(500).json({ message: "Login failed" });
+      console.log("Creating user hash...");
+      const passwordHash = await bcrypt.hash(password, 10);
+      console.log("Storing user in database...");
+      const user = await storage.createUser({ name, email, passwordHash });
+      console.log("User created successfully:", user.id);
+
+      req.login(user, (err) => {
+        if (err) {
+          console.error("Login error after registration:", err);
+          return res.status(500).json({ message: "Login failed after registration" });
+        }
+        
+        console.log("User logged in successfully, session:", req.sessionID);
+        console.log("Session cookie will be set automatically by express-session");
+        console.log("Response headers before send:", res.getHeaders());
+        
+        res.status(201).json({ user: { id: user.id, name: user.name, email: user.email } });
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        console.error("Validation error:", error.errors);
+        return res.status(400).json({ message: error.errors[0].message });
+      }
+      console.error("Registration error details:", error);
+      res.status(500).json({ message: "Registration failed", error: process.env.NODE_ENV === 'development' ? error.message : undefined });
     }
-    if (!user) {
-      console.log("Login failed for:", req.body.email, "Reason:", info?.message);
-      return res.status(401).json({ message: info.message || "Invalid credentials" });
+  });
+
+  // Fixed login route with better cookie logging
+  app.post("/api/auth/login", (req, res, next) => {
+    try {
+      loginSchema.parse(req.body);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
     }
 
-    req.login(user, (err) => {
+    passport.authenticate("local", (err: any, user: any, info: any) => {
       if (err) {
-        console.error("Login session error:", err);
+        console.error("Passport authentication error:", err);
         return res.status(500).json({ message: "Login failed" });
       }
-      console.log("User logged in successfully:", user.id, "Session:", req.sessionID);
-      console.log("Set-Cookie header:", `sessionId=${req.sessionID}; HttpOnly; Secure; SameSite=None; Path=/; Domain=${process.env.NODE_ENV === 'production' ? 'money-marathon-backend.onrender.com' : 'localhost'}`);
-      res.json({ user: { id: user.id, name: user.name, email: user.email } });
-    });
-  })(req, res, next);
-});
+      if (!user) {
+        console.log("Login failed for:", req.body.email, "Reason:", info?.message);
+        return res.status(401).json({ message: info.message || "Invalid credentials" });
+      }
+
+      req.login(user, (err) => {
+        if (err) {
+          console.error("Login session error:", err);
+          return res.status(500).json({ message: "Login failed" });
+        }
+        
+        console.log("User logged in successfully:", user.id, "Session:", req.sessionID);
+        console.log("Session cookie will be set automatically by express-session");
+        console.log("Response headers before send:", res.getHeaders());
+        
+        res.json({ user: { id: user.id, name: user.name, email: user.email } });
+      });
+    })(req, res, next);
+  });
  
   app.post("/api/auth/logout", (req, res) => {
     req.logout((err) => {
@@ -203,6 +223,8 @@ app.post("/api/auth/login", (req, res, next) => {
 
   app.get("/api/auth/user", (req, res) => {
     console.log("Auth check - Session:", req.sessionID, "Authenticated:", req.isAuthenticated());
+    console.log("Received cookies:", req.headers.cookie);
+    
     if (req.isAuthenticated()) {
       const user = req.user as any;
       console.log("Returning user:", user.id);
@@ -334,4 +356,4 @@ app.post("/api/auth/login", (req, res, next) => {
 
   const httpServer = createServer(app);
   return httpServer;
-}
+} 
