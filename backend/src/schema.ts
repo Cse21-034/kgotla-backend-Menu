@@ -1,3 +1,5 @@
+ 
+// schema.ts (unchanged, but you can optionally add the sessions table for Drizzle migrations if using them)
 import { sql, relations } from "drizzle-orm";
 import { pgTable, text, varchar, decimal, integer, timestamp, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
@@ -33,6 +35,13 @@ export const dayEntries = pgTable("day_entries", {
   odds: decimal("odds", { precision: 4, scale: 2 }).notNull(),
   winnings: decimal("winnings", { precision: 12, scale: 2 }).notNull(),
   result: dayResultEnum("result").default("pending").notNull(),
+});
+
+// Optional: Add sessions table schema for reference (connect-pg-simple creates it automatically)
+export const sessions = pgTable("sessions", {
+  sid: varchar("sid").primaryKey().notNull(),
+  sess: json("sess").notNull(),
+  expire: timestamp("expire", { precision: 6 }).notNull(),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
