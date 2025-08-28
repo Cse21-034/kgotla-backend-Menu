@@ -1,3 +1,4 @@
+// components/plans/plan-table.tsx
 import { Plan, DayEntry } from "@/types/schema";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -120,48 +121,46 @@ export function PlanTable({ plan, dayEntries }: PlanTableProps) {
   const currentDay = completedEntries.length + 1;
 
   return (
-    <div className="bg-card rounded-lg border border-border overflow-hidden">
-      <div className="p-6 border-b border-border">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">
-              {plan.name} - Detailed View
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Building wealth is a Marathon, not a Sprint
-            </p>
-          </div>
-          <div className="flex items-center space-x-3 mt-4 sm:mt-0">
-            <Button variant="outline" size="sm" data-testid="button-edit-plan">
-              Edit Plan
-            </Button>
-            <Button variant="outline" size="sm" data-testid="button-restart-plan">
-              Restart from Day
-            </Button>
-            <Button className="bg-chart-1 hover:bg-chart-1/90" size="sm" data-testid="button-export-plan">
-              Export
-            </Button>
-          </div>
+    <div className="bg-card rounded-lg border border-border overflow-hidden shadow-md">
+      <div className="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-xl font-semibold text-foreground mb-2 text-center sm:text-left">
+            {plan.name} - Detailed View
+          </h3>
+          <p className="text-sm text-muted-foreground text-center sm:text-left">
+            Building wealth is a Marathon, not a Sprint
+          </p>
+        </div>
+        <div className="flex items-center space-x-3 mt-4 sm:mt-0 justify-center sm:justify-start">
+          <Button variant="outline" size="sm" data-testid="button-edit-plan">
+            Edit Plan
+          </Button>
+          <Button variant="outline" size="sm" data-testid="button-restart-plan">
+            Restart from Day
+          </Button>
+          <Button className="bg-chart-1 hover:bg-chart-1/90" size="sm" data-testid="button-export-plan">
+            Export
+          </Button>
         </div>
       </div>
       
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full table-auto">
           <thead className="bg-muted">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider sm:px-6">
                 Day
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider sm:px-6">
                 Wager
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider sm:px-6">
                 Odds
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider sm:px-6">
                 Winnings
               </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider sm:px-6">
                 Result
               </th>
             </tr>
@@ -173,19 +172,19 @@ export function PlanTable({ plan, dayEntries }: PlanTableProps) {
                 className={`hover:bg-muted/50 transition-colors ${getRowOpacity(entry)}`}
                 data-testid={`row-day-${entry.day}`}
               >
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
+                <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground sm:px-6">
                   {entry.day}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground money-text">
+                <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground money-text sm:px-6">
                   R {parseFloat(entry.wager).toLocaleString()}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                <td className="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground sm:px-6">
                   {parseFloat(entry.odds).toFixed(2)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-chart-1 money-text">
+                <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-chart-1 money-text sm:px-6">
                   R {parseFloat(entry.winnings).toLocaleString()}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
+                <td className="px-4 py-4 whitespace-nowrap text-center sm:px-6">
                   {getResultButton(entry)}
                 </td>
               </tr>
@@ -194,30 +193,34 @@ export function PlanTable({ plan, dayEntries }: PlanTableProps) {
         </table>
       </div>
       
-      <div className="p-6 border-t border-border bg-muted/30">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center space-x-6 text-sm">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-chart-1"></div>
-              <span className="text-muted-foreground">
-                Completed ({completedEntries.length})
-              </span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-accent"></div>
-              <span className="text-muted-foreground">Current (1)</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-muted border-2 border-border"></div>
-              <span className="text-muted-foreground">
-                Pending ({plan.days - currentDay})
-              </span>
-            </div>
+      <div className="p-4 border-t border-border bg-muted/30 flex flex-col sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div className="flex items-center space-x-4 text-sm flex-wrap justify-center sm:justify-start gap-2 sm:gap-0">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 rounded-full bg-chart-1"></div>
+            <span className="text-muted-foreground">
+              Completed ({completedEntries.length})
+            </span>
           </div>
-          <div className="mt-4 sm:mt-0 text-sm text-muted-foreground">
-            Last updated: Just now
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 rounded-full bg-accent"></div>
+            <span className="text-muted-foreground">Current (1)</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 rounded-full bg-muted border-2 border-border"></div>
+            <span className="text-muted-foreground">
+              Pending ({plan.days - currentDay})
+            </span>
           </div>
         </div>
+        <div className="mt-4 sm:mt-0 text-sm text-muted-foreground text-center sm:text-left">
+          Last updated: Just now
+        </div>
+      </div>
+
+      {/* Bottom Banner Ad */}
+      <div className="bg-accent text-center py-4 text-sm text-accent-foreground rounded-md mt-6">
+        <p>Advertisement Here</p>
+        {/* Integrate ad script or image here */}
       </div>
     </div>
   );
