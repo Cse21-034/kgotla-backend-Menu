@@ -1,28 +1,23 @@
-import { useQuery } from "@tanstack/react-query";
-import { getQueryFn } from "@/lib/queryClient";
-import { User } from "@/types/schema";
-
-interface AuthResponse {
-  user: User;
-}
+// hooks/use-auth.ts
+import { useQuery } from '@tanstack/react-query';
+import { getQueryFn } from '@/lib/queryClient';
 
 export function useAuth() {
-  const { data, isLoading, error } = useQuery<AuthResponse | null>({
-    queryKey: ["/api/auth/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['/api/auth/user'],
+    queryFn: getQueryFn({ on401: 'returnNull' }),
     retry: false,
-    // Add these options to handle the authentication state properly
     refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  if (error || data === null) {
+    localStorage.removeItem('jwt_token');
+    return { user: null, isLoading: false, hasChecked: true };
+  }
 
   return {
     user: data?.user || null,
     isLoading,
-    error,
-    isAuthenticated: !!data?.user,
-    // Add this to differentiate between loading and unauthenticated
-    hasChecked: !isLoading,
+    hasChecked: true,
   };
-} 
+}
