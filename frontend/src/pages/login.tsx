@@ -13,7 +13,7 @@ export default function Login() {
           <div className="flex items-center justify-center mb-4">
             {/* Logo */}
             <img
-              src="/logo.png"
+              src="https://iili.io/KFIFETg.png"
               alt="Money Marathon Logo"
               className="w-12 h-12 rounded-lg object-cover"
             />
