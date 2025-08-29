@@ -32,7 +32,7 @@ export function Navbar() {
             <div className="flex items-center space-x-3 cursor-pointer">
               {/* Responsive Logo */}
               <img
-                src="/logo.png"
+                src="frontend/src/logo.png"
                 alt="Money Marathon Logo"
                 className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 object-contain"
               />
