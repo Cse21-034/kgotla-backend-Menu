@@ -88,7 +88,7 @@ function ImageCarousel() {
 // 🔹 Sticky Footer Affiliate Carousel
 function StickyFooterAd() {
   const affiliateAds = [
-    { src: "https://iili.io/K3gpQ6J.png", link: "https://promo1.com" },
+    { src: "https://track.deriv.com/_-1DpJjc-4Ugad7NeR55Oi2Nd7ZgqdRLk/1/", link: "https://track.deriv.com/_-1DpJjc-4Ugad7NeR55Oi2Nd7ZgqdRLk/1/" },
     { src: "https://iili.io/K34hSVa.png", link: "https://promo2.com" },
     { src: "https://iili.io/K34NHw7.png", link: "https://promo3.com" },
   ];
