@@ -172,10 +172,38 @@ export default function Dashboard() {
           </div>
 
           {/* Sidebar Ad - Side Banner */}
-          <div className="bg-accent text-center py-4 rounded-lg border border-accent text-accent-foreground">
-            <p>Sidebar Advertisement Here</p>
-             <img src="https://iili.io/KFIn5Ga.png" alt="Ad" className="w-full h-auto" /> 
-          </div>
+<div className="bg-card text-center p-4 rounded-xl border border-border shadow-md">
+  <p className="mb-3 text-sm font-medium text-muted-foreground">
+    Sponsored
+  </p>
+  <a 
+    href="https://your-ad-link.com" 
+    target="_blank" 
+    rel="noopener noreferrer"
+    className="block"
+  >
+    <img 
+      src="https://iili.io/KFIn5Ga.png" 
+      alt="Ad" 
+      className="w-full max-w-sm sm:max-w-md mx-auto h-20 sm:h-24 object-contain rounded-md transition-transform hover:scale-105"
+    /> 
+  </a>
+  <Button 
+    asChild 
+    variant="outline" 
+    size="sm" 
+    className="mt-3"
+  >
+    <a 
+      href="https://your-ad-link.com" 
+      target="_blank" 
+      rel="noopener noreferrer"
+    >
+      Learn More
+    </a>
+  </Button>
+</div>
+
 
           {/* Create Plan Form */}
           <div className="sticky top-24">
