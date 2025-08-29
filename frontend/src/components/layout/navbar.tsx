@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ChartLine, Bell, LogOut } from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -30,15 +30,23 @@ export function Navbar() {
         <div className="flex items-center space-x-8">
           <Link href="/">
             <div className="flex items-center space-x-3 cursor-pointer">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <ChartLine className="text-primary-foreground h-5 w-5" />
-              </div>
-              <span className="text-xl font-bold text-foreground">Money Marathon</span>
+              {/* Logo Image */}
+              <img
+                src="/logo.png"
+                alt="Money Marathon Logo"
+                className="h-10 w-10 object-contain"
+              />
+              <span className="text-xl font-bold text-foreground">
+                Money Marathon
+              </span>
             </div>
           </Link>
           <nav className="hidden md:flex space-x-6">
             <Link href="/">
-              <a className="text-foreground hover:text-primary transition-colors font-medium" data-testid="nav-dashboard">
+              <a
+                className="text-foreground hover:text-primary transition-colors font-medium"
+                data-testid="nav-dashboard"
+              >
                 Dashboard
               </a>
             </Link>
@@ -57,13 +65,16 @@ export function Navbar() {
                 {user?.name?.charAt(0)?.toUpperCase() || "U"}
               </span>
             </div>
-            <span className="hidden sm:block text-sm font-medium" data-testid="user-name">
+            <span
+              className="hidden sm:block text-sm font-medium"
+              data-testid="user-name"
+            >
               {user?.name}
             </span>
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => logoutMutation.mutate()}
             disabled={logoutMutation.isPending}
             data-testid="button-logout"
