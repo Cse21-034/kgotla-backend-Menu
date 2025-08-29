@@ -30,13 +30,13 @@ export function Navbar() {
         <div className="flex items-center space-x-8">
           <Link href="/">
             <div className="flex items-center space-x-3 cursor-pointer">
-              {/* Logo Image */}
+              {/* Responsive Logo */}
               <img
                 src="/logo.png"
                 alt="Money Marathon Logo"
-                className="h-10 w-10 object-contain"
+                className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 object-contain"
               />
-              <span className="text-xl font-bold text-foreground">
+              <span className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
                 Money Marathon
               </span>
             </div>
