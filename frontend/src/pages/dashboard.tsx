@@ -174,7 +174,7 @@ export default function Dashboard() {
           {/* Sidebar Ad - Side Banner */}
           <div className="bg-accent text-center py-4 rounded-lg border border-accent text-accent-foreground">
             <p>Sidebar Advertisement Here</p>
-            {/* Integrate ad script or image here, e.g., <img src="side-ad.png" alt="Ad" className="w-full h-auto" /> */}
+             <img src="https://iili.io/KFIn5Ga.png" alt="Ad" className="w-full h-auto" /> 
           </div>
 
           {/* Create Plan Form */}
