@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: money-marathon-backend
+    name: kgotla-backend-Menu
     env: node
     plan: free
     buildCommand: npm install && npm run build
